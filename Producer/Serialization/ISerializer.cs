@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Producer.Models.Messages;
 
 namespace Producer.Serialization
 {
     public interface ISerializer
     {
-        byte[] Serialize<T>(T obj);
+        byte[] Serialize<T>(T obj) where T : BaseMessage;
         T Deserialize<T>(byte[] message);
     }
 }

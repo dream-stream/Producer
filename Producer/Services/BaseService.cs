@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 
@@ -6,9 +7,11 @@ namespace Producer.Services
 {
     public abstract class BaseService : IHostedService
     {
-        public virtual async Task StartAsync(CancellationToken cancellationToken)
+        private Timer _timer;
+        public virtual Task StartAsync(CancellationToken cancellationToken)
         {
-            await DoAsync();
+            _timer = new Timer(DoAsync, null, TimeSpan.Zero, TimeSpan.FromSeconds(5));
+            return Task.CompletedTask;
         }
 
         public virtual Task StopAsync(CancellationToken cancellationToken)
@@ -16,6 +19,6 @@ namespace Producer.Services
             return Task.CompletedTask;
         }
 
-        public abstract Task DoAsync();
+        public abstract void DoAsync(object state);
     }
 }

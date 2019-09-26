@@ -9,19 +9,20 @@ using Producer.Serialization;
 
 namespace Producer.Services
 {
-    public class WebSocketService : BaseService
+    public class WebSocketService0 : BaseService
     {
         private readonly Guid _producerId;
         private readonly ClientWebSocket _socket;
         private Message _message;
         private readonly ISerializer _serializer;
 
-        public WebSocketService(ISerializer serializer, ClientWebSocket socket)
+        public WebSocketService0(ISerializer serializer, ClientWebSocket socket)
         {
             _serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
             _socket = socket ?? throw new ArgumentNullException(nameof(socket));
 
-            _socket.ConnectAsync(new Uri("ws://localhost:5000/ws"), CancellationToken.None).Wait();
+            const string service = "broker-0";
+            _socket.ConnectAsync(new Uri($"ws://{service}.broker.default.svc.cluster.local/ws"), CancellationToken.None).Wait();
 
             _producerId = Guid.NewGuid();
         }
@@ -36,8 +37,8 @@ namespace Producer.Services
             var messageHeader = new MessageHeader
             {
                 ProducerId = _producerId,
-                Topic = "TestTopic",
-                Partition = 3
+                Topic = "Topic 0",
+                Partition = 0
             };
             var header = messageHeader.Serialize(_serializer);
 
