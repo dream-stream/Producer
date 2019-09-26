@@ -1,3 +1,4 @@
+using System.Net.WebSockets;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -15,6 +16,7 @@ namespace Producer
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddSingleton<ISerializer, Serializer>();
+            services.AddSingleton<ClientWebSocket>();
 
             services.AddHostedService<WebSocketService>();
         }

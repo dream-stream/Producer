@@ -3,30 +3,28 @@ using System.Collections.Generic;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
-using Producer.Models;
+using Producer.Models.Messages;
 using Producer.Serialization;
 
 namespace Producer.Services
 {
     public class WebSocketService : BaseService
     {
-        private ClientWebSocket _socket;
-        private List<byte[]> _messages;
+        private readonly Guid _producerId;
+        private readonly ClientWebSocket _socket;
+        private readonly byte[] _header;
+        private readonly List<byte[]> _messages;
         private readonly ISerializer _serializer;
 
-        public WebSocketService(ISerializer serializer)
+        public WebSocketService(ISerializer serializer, ClientWebSocket socket)
         {
             _serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
-        }
+            _socket = socket ?? throw new ArgumentNullException(nameof(socket));
+            
+            _socket.ConnectAsync(new Uri("ws://localhost:5000/ws"), CancellationToken.None).Wait();
 
-        public override async Task StartAsync(CancellationToken cancellationToken)
-        {
-            //TODO Dependency injection
-            _socket = new ClientWebSocket();
+            _producerId = Guid.NewGuid();
             _messages = new List<byte[]>();
-
-            await _socket.ConnectAsync(new Uri("ws://localhost:5000/ws"), cancellationToken);
-            await base.StartAsync(cancellationToken);
         }
 
         public override async Task StopAsync(CancellationToken cancellationToken)
@@ -36,32 +34,31 @@ namespace Producer.Services
 
         public override async Task DoAsync()
         {
-            var msg = new PreProcessedMessage
+            var messageHeader = new MessageHeader
             {
-                Topic = "MyTopic",
-                Partition = 1,
-                Message = "Hello World"
+                ProducerId = _producerId,
+                Topic = "TestTopic",
+                Partition = 3
+            };
+            var message = new Message
+            {
+                Msg = "Hello World!"
             };
 
-            var serializeMessage = _serializer.Serialize(msg.Message);
+            _messages.Add(messageHeader.Serialize(_serializer));
+            _messages.Add(message.Serialize(_serializer));
+            var counter = 0;
 
             while (true)
             {
-                Console.WriteLine($"Sending message: {msg.Message}");
-                await _socket.SendAsync(new ArraySegment<byte>(serializeMessage, 0, serializeMessage.Length), WebSocketMessageType.Binary, true, CancellationToken.None);
-                
+                for (var i = 0; i < _messages.Count; i++)
+                {
+                    Console.WriteLine($"Sending message: {message.Msg}");
+                    await _socket.SendAsync(new ArraySegment<byte>(_messages[i], 0, _messages[i].Length), WebSocketMessageType.Binary, ++counter == 6, CancellationToken.None);
+                }
+
                 await Task.Delay(1000 * 5);
             }
-        }
-
-        private Task<byte[]> PrepareMessages(PreProcessedMessage message)
-        {
-            //TODO Serialize message
-            //TODO Add messages to list
-            //TODO Compress list
-
-            //TODO Send list to Dream-Stream
-            return new Task<byte[]>(() => new byte[12]);
         }
     }
 }
