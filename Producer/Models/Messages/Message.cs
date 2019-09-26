@@ -6,6 +6,6 @@ namespace Producer.Models.Messages
     public class Message : BaseMessage
     {
         [Key(1)]
-        public string Msg { get; set; }
+        public string[] Msg { get; set; }
     }
 }

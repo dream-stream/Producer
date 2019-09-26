@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
+using MessagePack;
 using Producer.Models.Messages;
 using Producer.Serialization;
 
@@ -12,8 +14,7 @@ namespace Producer.Services
     {
         private readonly Guid _producerId;
         private readonly ClientWebSocket _socket;
-        private readonly byte[] _header;
-        private readonly List<byte[]> _messages;
+        private Message _message;
         private readonly ISerializer _serializer;
 
         public WebSocketService(ISerializer serializer, ClientWebSocket socket)
@@ -24,7 +25,6 @@ namespace Producer.Services
             _socket.ConnectAsync(new Uri("ws://localhost:5000/ws"), CancellationToken.None).Wait();
 
             _producerId = Guid.NewGuid();
-            _messages = new List<byte[]>();
         }
 
         public override async Task StopAsync(CancellationToken cancellationToken)
@@ -40,25 +40,36 @@ namespace Producer.Services
                 Topic = "TestTopic",
                 Partition = 3
             };
-            var message = new Message
-            {
-                Msg = "Hello World!"
-            };
+            var header = LZ4MessagePackSerializer.Serialize(messageHeader);
+            
+            
+            _message = new Message();
+            _message.Msg = GenerateMessages(100).ToArray();
+            var message = LZ4MessagePackSerializer.Serialize(_message);
 
-            _messages.Add(messageHeader.Serialize(_serializer));
-            _messages.Add(message.Serialize(_serializer));
-            var counter = 0;
+            var message2 = LZ4MessagePackSerializer.Deserialize<Message>(message);
 
             while (true)
             {
-                for (var i = 0; i < _messages.Count; i++)
-                {
-                    Console.WriteLine($"Sending message: {message.Msg}");
-                    await _socket.SendAsync(new ArraySegment<byte>(_messages[i], 0, _messages[i].Length), WebSocketMessageType.Binary, ++counter == 6, CancellationToken.None);
-                }
-
+                Console.WriteLine("Sending Header");
+                await _socket.SendAsync(new ArraySegment<byte>(header, 0, header.Length), WebSocketMessageType.Binary, false, CancellationToken.None);
+                Console.WriteLine("Sending Message");
+                await _socket.SendAsync(new ArraySegment<byte>(message, 0, message.Length), WebSocketMessageType.Binary, true, CancellationToken.None);
+                
                 await Task.Delay(1000 * 5);
             }
+        }
+
+        private static IEnumerable<string> GenerateMessages(int amount)
+        {
+            var list = new List<string>();
+
+            for (var i = 0; i < amount; i++)
+            {
+                list.Add($"Hello World {i}");
+            }
+
+            return list;
         }
     }
 }

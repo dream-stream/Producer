@@ -6,12 +6,12 @@ namespace Producer.Serialization
     {
         public byte[] Serialize<T>(T obj)
         {
-            return MessagePackSerializer.Serialize(obj);
+            return LZ4MessagePackSerializer.Serialize(obj);
         }
 
         public T Deserialize<T>(byte[] message)
         {
-            return MessagePackSerializer.Deserialize<T>(message);
+            return LZ4MessagePackSerializer.Deserialize<T>(message);
         }
     }
 }
