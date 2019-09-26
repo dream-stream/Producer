@@ -1,10 +1,11 @@
 ﻿using MessagePack;
+using Producer.Models.Messages;
 
 namespace Producer.Serialization
 {
     public class Serializer : ISerializer
     {
-        public byte[] Serialize<T>(T obj)
+        public byte[] Serialize<T>(T obj) where T : BaseMessage
         {
             return LZ4MessagePackSerializer.Serialize(obj);
         }
