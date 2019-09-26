@@ -40,14 +40,11 @@ namespace Producer.Services
                 Topic = "TestTopic",
                 Partition = 3
             };
-            var header = LZ4MessagePackSerializer.Serialize(messageHeader);
-            
+            var header = LZ4MessagePackSerializer.Serialize<BaseMessage>(messageHeader);
             
             _message = new Message();
-            _message.Msg = GenerateMessages(100).ToArray();
-            var message = LZ4MessagePackSerializer.Serialize(_message);
-
-            var message2 = LZ4MessagePackSerializer.Deserialize<Message>(message);
+            _message.Msg = GenerateMessages(1000).ToArray();
+            var message = LZ4MessagePackSerializer.Serialize<BaseMessage>(_message);
 
             while (true)
             {
