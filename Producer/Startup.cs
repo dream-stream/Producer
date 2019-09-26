@@ -1,3 +1,4 @@
+using System;
 using System.Net.WebSockets;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -14,13 +15,14 @@ namespace Producer
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddSingleton<ISerializer, Serializer>();
+            services.AddTransient<ISerializer, Serializer>();
             services.AddTransient<ClientWebSocket>();
 
-            //services.AddHostedService<WebSocketService>();
-            services.AddHostedService<WebSocketService0>();
             services.AddHostedService<WebSocketService1>();
             services.AddHostedService<WebSocketService2>();
+            //services.AddHostedService<WebSocketService3>();
+            //services.AddHostedService<WebSocketService4>();
+            //services.AddHostedService<WebSocketService5>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

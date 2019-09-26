@@ -13,15 +13,18 @@ namespace Producer.Services
     {
         private readonly Guid _producerId;
         private readonly ClientWebSocket _socket;
+        private readonly string _topic;
         private Message _message;
         private readonly ISerializer _serializer;
 
-        public WebSocketService(ISerializer serializer, ClientWebSocket socket)
+
+        public WebSocketService(ISerializer serializer, ClientWebSocket socket, string connectionAddress, string topic)
         {
             _serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
             _socket = socket ?? throw new ArgumentNullException(nameof(socket));
+            _topic = topic;
 
-            _socket.ConnectAsync(new Uri("ws://localhost:5000/ws"), CancellationToken.None).Wait();
+            _socket.ConnectAsync(new Uri(connectionAddress), CancellationToken.None).Wait();
 
             _producerId = Guid.NewGuid();
         }
@@ -36,7 +39,7 @@ namespace Producer.Services
             var messageHeader = new MessageHeader
             {
                 ProducerId = _producerId,
-                Topic = "TestTopic",
+                Topic = _topic,
                 Partition = 3
             };
             var header = messageHeader.Serialize(_serializer);
