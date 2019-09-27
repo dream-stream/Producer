@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Producer.Models.Messages;
 using Producer.Serialization;
@@ -36,7 +37,7 @@ namespace Producer.Services
                 Partition = 3 //TODO Calculate the partition
             };
 
-            Console.WriteLine("Sending Header");
+            Console.WriteLine($"Sending Header: {JsonSerializer.Serialize(header)}:");
             await _socket.SendMessage(header.Serialize(_serializer));
             Console.WriteLine("Sending Message");
             await _socket.SendMessage(message.Serialize(_serializer));
