@@ -32,7 +32,7 @@ namespace Producer.Services
         {
             var header = new MessageHeader
             {
-                Topic = "Topic", //TODO Calculate topic
+                Topic = $"Topic {Environment.MachineName}", //TODO Calculate topic
                 Partition = 3 //TODO Calculate the partition
             };
 

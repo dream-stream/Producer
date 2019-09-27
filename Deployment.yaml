@@ -24,8 +24,8 @@ spec:
         - name: DOTNET_ENVIRONMENT
           value: "Production"
         - name: PRODUCER_AMOUNT
-          value: "3"
+          value: "10"
         - name: MESSAGE_AMOUNT
           value: "1000"
         - name: SEND_DELAY
-          value: "1000"
+          value: "100"
