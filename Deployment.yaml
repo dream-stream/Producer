@@ -20,3 +20,12 @@ spec:
         imagePullPolicy: Always
         ports:
         - containerPort: 80
+        env:
+        - name: DOTNET_ENVIRONMENT
+          value: "Production"
+        - name: PRODUCER_AMOUNT
+          value: "3"
+        - name: MESSAGE_AMOUNT
+          value: "1000"
+        - name: SEND_DELAY
+          value: "1000"
