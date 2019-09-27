@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Hosting;
 
 namespace Producer.Services
 {
-    public abstract class BaseService : IHostedService
+    public abstract class BaseService
     {
         private Timer _timer;
+
         public virtual Task StartAsync(CancellationToken cancellationToken)
         {
             _timer = new Timer(DoAsync, null, TimeSpan.Zero, TimeSpan.FromSeconds(5));

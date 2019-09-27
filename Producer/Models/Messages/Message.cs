@@ -7,5 +7,7 @@ namespace Producer.Models.Messages
     {
         [Key(1)]
         public string[] Msg { get; set; }
+
+        //TODO Function to calculate Partition
     }
 }
