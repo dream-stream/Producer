@@ -18,5 +18,8 @@ spec:
       - name: producer
         image: banders2/producer
         imagePullPolicy: Always
+        env:
+        - name: test
+          value: "3"
         ports:
         - containerPort: 80
