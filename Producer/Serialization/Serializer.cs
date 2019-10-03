@@ -5,7 +5,7 @@ namespace Producer.Serialization
 {
     public class Serializer : ISerializer
     {
-        public byte[] Serialize<T>(T obj) where T : BaseMessage
+        public byte[] Serialize<T>(T obj) where T : BaseTransferMessage
         {
             return LZ4MessagePackSerializer.Serialize(obj);
         }
