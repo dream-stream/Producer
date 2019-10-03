@@ -3,7 +3,7 @@
 namespace Producer.Models.Messages
 {
     [MessagePackObject]
-    public class MessageHeader : BaseMessage
+    public class MessageHeader : BaseTransferMessage
     {
         [Key(1)]
         public string Topic { get; set; }

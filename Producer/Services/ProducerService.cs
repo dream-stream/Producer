@@ -36,7 +36,8 @@ namespace Producer.Services
             if (_batchingService.BatchMessage(header, message) == null)
                 return;
 
-            await SendMessage(header, _serializer.Serialize(_batchingService.GetMessages(header)));
+
+            await SendMessage(header, _batchingService.GetMessages(header).Serialize(_serializer));
         }
 
         public async Task SendMessage(MessageHeader header, byte[] message)
