@@ -7,7 +7,7 @@ namespace Producer.Serialization
     {
         public byte[] Serialize<T>(T obj) where T : BaseMessage
         {
-            return LZ4MessagePackSerializer.Serialize(obj);
+            return LZ4MessagePackSerializer.Serialize<BaseMessage>(obj);
         }
 
         public T Deserialize<T>(byte[] message)

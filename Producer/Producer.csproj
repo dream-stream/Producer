@@ -6,12 +6,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Models\" />
     <Folder Include="Serialization\" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="MessagePack" Version="1.7.3.7" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="addresses.csv">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

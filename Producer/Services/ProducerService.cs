@@ -11,11 +11,13 @@ namespace Producer.Services
         private readonly ISerializer _serializer;
         private readonly ProducerSocket _socket;
         private readonly string _connectionString;
+        private readonly BatchingService _batchingService;
 
-        public ProducerService(ISerializer serializer, ProducerSocket socket, string connectionString)
+        public ProducerService(ISerializer serializer, ProducerSocket socket, BatchingService batchingService, string connectionString)
         {
             _serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
             _socket = socket ?? throw new ArgumentNullException(nameof(socket));
+            _batchingService = batchingService ?? throw new ArgumentNullException(nameof(batchingService));
             _connectionString = !string.IsNullOrEmpty(connectionString) ? connectionString : throw new ArgumentNullException(nameof(connectionString));
         }
 
@@ -29,18 +31,20 @@ namespace Producer.Services
             await _socket.CloseConnection();
         }
 
-        public async Task SendMessage(Message message)
+        public async Task AddMessage(MessageHeader header, Message message)
         {
-            var header = new MessageHeader
-            {
-                Topic = $"Topic {Environment.MachineName}", //TODO Calculate topic
-                Partition = 3 //TODO Calculate the partition
-            };
+            if (_batchingService.BatchMessage(header, message) == null)
+                return;
 
+            await SendMessage(header, _serializer.Serialize(_batchingService.GetMessages(header)));
+        }
+
+        public async Task SendMessage(MessageHeader header, byte[] message)
+        {
             Console.WriteLine($"Sending Header: {JsonSerializer.Serialize(header)}:");
             await _socket.SendMessage(header.Serialize(_serializer));
             Console.WriteLine("Sending Message");
-            await _socket.SendMessage(message.Serialize(_serializer));
+            await _socket.SendMessage(message);
         }
     }
 }

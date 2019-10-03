@@ -1,11 +1,10 @@
-﻿using System;
-using MessagePack;
+﻿using MessagePack;
 using Producer.Serialization;
 
 namespace Producer.Models.Messages
 {
     [Union(0, typeof(MessageHeader))]
-    [Union(1, typeof(Message))]
+    [Union(1, typeof(BatchedMessages))]
     [MessagePackObject]
     public abstract class BaseMessage
     {
