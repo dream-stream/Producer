@@ -1,43 +1,64 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading;
 using Producer.Models.Messages;
 
 namespace Producer.Services
 {
     public class BatchingService
     {
-        private readonly Dictionary<MessageHeader, BatchedMessages> _messages;
+        private readonly Dictionary<MessageHeader, TimedBatchingQueue> _messages;
         private readonly int _batchingSize;
 
         public BatchingService(int batchingSize)
         {
             _batchingSize = batchingSize;
-            _messages = new Dictionary<MessageHeader, BatchedMessages>();
+            _messages = new Dictionary<MessageHeader, TimedBatchingQueue>();
         }
 
-        public MessageHeader BatchMessage(MessageHeader header, Message message)
+        public bool TryBatchMessage(MessageHeader header, Message message, out MessageHeader fullQueue)
         {
-            if (_messages.TryGetValue(header, out var list))
+            if (!_messages.TryGetValue(header, out var list))
             {
-                list.Messages.Add(message);
-                return list.Messages.Count == _batchingSize ? header : null;
+                fullQueue = null;
+                return false;
             }
 
-            _messages.Add(header, new BatchedMessages {Messages = new List<Message> {message}});
+            list.MessageContainer.Messages.Add(message);
+            if (list.MessageContainer.Messages.Count == 1)
+            {
+                Console.WriteLine("Timer started");
+                list.Timer.Change(TimeSpan.FromSeconds(EnvironmentVariables.BatchTimerVariable), TimeSpan.FromSeconds(EnvironmentVariables.BatchTimerVariable));
+            }
 
-            return null;
+            fullQueue = list.MessageContainer.Messages.Count == _batchingSize ? header : null;
+            return true;
         }
 
-        public BatchedMessages GetMessages(MessageHeader header)
+        public MessageContainer GetMessages(MessageHeader header)
         {
             if (!_messages.TryGetValue(header, out var list))
                 throw new KeyNotFoundException(
                     $"Messages for {nameof(header.Topic)}: {header.Topic} and {nameof(header.Partition)}: {header.Partition} not found");
             
-            var returnList = new BatchedMessages {Messages = new List<Message>(list.Messages)};
-            list.Messages.Clear();
+            var returnList = new MessageContainer {Header = header, Messages = new List<Message>(list.MessageContainer.Messages)};
+            list.MessageContainer.Messages.Clear();
+            list.Timer.Change(Timeout.Infinite, Timeout.Infinite);
             return returnList;
         }
 
-        //TODO Make Timed Functionality
+        public void CreateBatch(MessageHeader header, Message message, Timer timer)
+        {
+            Console.WriteLine($"Creating Queue {header.Topic}, {header.Partition}");
+            _messages.Add(header, new TimedBatchingQueue
+            {
+                Timer = timer,
+                MessageContainer = new MessageContainer
+                {
+                    Header = header,
+                    Messages = new List<Message> {message}
+                }
+            });
+        }
     }
 }

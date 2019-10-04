@@ -13,7 +13,7 @@ namespace Producer
             var messages = new Message[amount];
             var messageHeaders = new MessageHeader[amount];
 
-            for (var i = 0; i < amount; i++)
+            for (var i = 0; i < amount; i++) // TODO Generate more random messages
             {
                 messages[i] = new Message
                 {

@@ -4,9 +4,11 @@ using MessagePack;
 namespace Producer.Models.Messages
 {
     [MessagePackObject]
-    public class BatchedMessages : BaseTransferMessage
+    public class MessageContainer
     {
         [Key(1)]
+        public MessageHeader Header { get; set; }
+        [Key(2)]
         public List<Message> Messages { get; set; }
     }
 }

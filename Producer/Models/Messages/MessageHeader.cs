@@ -1,14 +1,20 @@
-﻿using MessagePack;
+﻿using System;
+using MessagePack;
 
 namespace Producer.Models.Messages
 {
     [MessagePackObject]
-    public class MessageHeader : BaseTransferMessage
+    public class MessageHeader
     {
         [Key(1)]
         public string Topic { get; set; }
         [Key(2)]
         public int Partition { get; set; }
+
+        public void Print()
+        {
+            Console.WriteLine($"Header: {nameof(Topic)}: {Topic}, {nameof(Partition)}: {Partition}");
+        }
 
         public override int GetHashCode()
         {

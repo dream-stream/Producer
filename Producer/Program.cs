@@ -10,30 +10,30 @@ namespace Producer
     {
         private static async Task Main()
         {
-            var devVariable = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
-            var amountOfProducersVariable = Environment.GetEnvironmentVariable("PRODUCER_AMOUNT") ?? "2";
-            var amountOfMessagesVariable = Environment.GetEnvironmentVariable("MESSAGE_AMOUNT") ?? "1000";
-            var batchingSizeVariable = Environment.GetEnvironmentVariable("BATCHING_SIZE") ?? "23";
-            var partitionAmountVariable = Environment.GetEnvironmentVariable("PARTITION_AMOUNT") ?? "100";
+            var devVariable = EnvironmentVariables.DevVariable;
+            var amountOfProducersVariable = EnvironmentVariables.AmountOfProducersVariable;
+            var amountOfMessagesVariable = EnvironmentVariables.AmountOfMessagesVariable;
+            var batchingSizeVariable = EnvironmentVariables.BatchingSizeVariable;
+            var partitionAmountVariable = EnvironmentVariables.PartitionAmountVariable;
 
-            var producers = GetProducers(int.Parse(amountOfProducersVariable), string.IsNullOrEmpty(devVariable), int.Parse(batchingSizeVariable));
+            var producers = GetProducers(amountOfProducersVariable, string.IsNullOrEmpty(devVariable), batchingSizeVariable); //TODO Lav producer til tråde
 
             producers.ForEach(async producer => { await producer.ConnectToBroker(); });
             AppDomain.CurrentDomain.ProcessExit += (sender, e) => producers.ForEach(async producer => { await producer.CloseConnection(); });
 
             while (true)
             {
-                var (messageHeader, message) = MessageGenerator.GenerateMessages(int.Parse(amountOfMessagesVariable), long.Parse(partitionAmountVariable));
-
                 producers.ForEach(async producer =>
                 {
+                    var (messageHeader, message) = MessageGenerator.GenerateMessages(amountOfMessagesVariable, partitionAmountVariable);
+
                     for (var i = 0; i < messageHeader.Length; i++)
                     {
                         await producer.AddMessage(messageHeader[i], message[i]);
                     }
                 });
 
-                await Task.Delay(1000);
+                await Task.Delay(15*1000);
             }
         }
 

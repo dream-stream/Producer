@@ -1,5 +1,5 @@
 using System;
-using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Producer.Models.Messages;
 using Producer.Serialization;
@@ -12,12 +12,14 @@ namespace Producer.Services
         private readonly ProducerSocket _socket;
         private readonly string _connectionString;
         private readonly BatchingService _batchingService;
+        private readonly Semaphore _lock;
 
         public ProducerService(ISerializer serializer, ProducerSocket socket, BatchingService batchingService, string connectionString)
         {
             _serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
             _socket = socket ?? throw new ArgumentNullException(nameof(socket));
             _batchingService = batchingService ?? throw new ArgumentNullException(nameof(batchingService));
+            _lock = new Semaphore(1, 1);
             _connectionString = !string.IsNullOrEmpty(connectionString) ? connectionString : throw new ArgumentNullException(nameof(connectionString));
         }
 
@@ -33,19 +35,31 @@ namespace Producer.Services
 
         public async Task AddMessage(MessageHeader header, Message message)
         {
-            if (_batchingService.BatchMessage(header, message) == null)
+            if (_batchingService.TryBatchMessage(header, message, out var queueKey))
+            {
+                if (queueKey != null)
+                    await SendMessage(_serializer.Serialize(_batchingService.GetMessages(queueKey)));
+
                 return;
+            }
 
+            var callback = new TimerCallback(async x =>
+            {
+                var messages = _batchingService.GetMessages(header);
+                header.Print();
+                await SendMessage(_serializer.Serialize(messages));
+            });
+            var timer = new Timer(callback, null, TimeSpan.FromSeconds(EnvironmentVariables.BatchTimerVariable), TimeSpan.FromSeconds(EnvironmentVariables.BatchTimerVariable));
 
-            await SendMessage(header, _batchingService.GetMessages(header).Serialize(_serializer));
+            _batchingService.CreateBatch(header, message, timer);
         }
 
-        public async Task SendMessage(MessageHeader header, byte[] message)
+        public async Task SendMessage(byte[] message)
         {
-            Console.WriteLine($"Sending Header: {JsonSerializer.Serialize(header)}:");
-            await _socket.SendMessage(header.Serialize(_serializer));
-            Console.WriteLine("Sending Message");
+            _lock.WaitOne();
             await _socket.SendMessage(message);
+            _lock.Release();
+
         }
     }
 }
