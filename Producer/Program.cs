@@ -43,11 +43,11 @@ namespace Producer
             for (var i = 0; i < amount; i++)
             {
                 var connectionString = isDev ? "ws://localhost:5000/ws" : $"ws://broker-{i}.broker.default.svc.cluster.local/ws";
-                var producer = new ProducerService(new Serializer(), new ProducerSocket(),
-                    new BatchingService(batchingSize));
-                await producer.Connect(connectionString);
+                
+                list.Add(new ProducerService(new Serializer(), new ProducerSocket(),
+                    new BatchingService(batchingSize)));
 
-                list.Add(producer);
+                await list[i].Connect(connectionString);
             }
 
             return list;
