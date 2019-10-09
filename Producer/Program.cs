@@ -16,9 +16,8 @@ namespace Producer
             var batchingSizeVariable = EnvironmentVariables.BatchingSizeVariable;
             var partitionAmountVariable = EnvironmentVariables.PartitionAmountVariable;
 
-            var producers = GetProducers(amountOfProducersVariable, string.IsNullOrEmpty(devVariable), batchingSizeVariable); //TODO Lav producer til tråde
+            var producers = await GetProducers(amountOfProducersVariable, string.IsNullOrEmpty(devVariable), batchingSizeVariable); //TODO Turn producers into threads
 
-            producers.ForEach(async producer => { await producer.ConnectToBroker(); });
             AppDomain.CurrentDomain.ProcessExit += (sender, e) => producers.ForEach(async producer => { await producer.CloseConnection(); });
 
             while (true)
@@ -29,22 +28,26 @@ namespace Producer
 
                     for (var i = 0; i < messageHeader.Length; i++)
                     {
-                        await producer.AddMessage(messageHeader[i], message[i]);
+                        await producer.Publish(messageHeader[i], message[i]);
                     }
                 });
 
-                await Task.Delay(15*1000);
+                await Task.Delay(15*1000); //Delay added for test of timer on batches
             }
         }
 
-        public static List<ProducerService> GetProducers(int amount, bool isDev, int batchingSize)
+        public static async Task<List<IProducer>> GetProducers(int amount, bool isDev, int batchingSize)
         {
-            var list = new List<ProducerService>();
+            var list = new List<IProducer>();
 
             for (var i = 0; i < amount; i++)
             {
                 var connectionString = isDev ? "ws://localhost:5000/ws" : $"ws://broker-{i}.broker.default.svc.cluster.local/ws";
-                list.Add(new ProducerService(new Serializer(), new ProducerSocket(), new BatchingService(batchingSize), connectionString));
+                var producer = new ProducerService(new Serializer(), new ProducerSocket(),
+                    new BatchingService(batchingSize));
+                await producer.Connect(connectionString);
+
+                list.Add(producer);
             }
 
             return list;

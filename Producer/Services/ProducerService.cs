@@ -6,26 +6,24 @@ using Producer.Serialization;
 
 namespace Producer.Services
 {
-    public class ProducerService
+    public class ProducerService : IProducer
     {
         private readonly ISerializer _serializer;
         private readonly ProducerSocket _socket;
-        private readonly string _connectionString;
         private readonly BatchingService _batchingService;
         private readonly Semaphore _lock;
 
-        public ProducerService(ISerializer serializer, ProducerSocket socket, BatchingService batchingService, string connectionString)
+        public ProducerService(ISerializer serializer, ProducerSocket socket, BatchingService batchingService)
         {
             _serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
             _socket = socket ?? throw new ArgumentNullException(nameof(socket));
             _batchingService = batchingService ?? throw new ArgumentNullException(nameof(batchingService));
             _lock = new Semaphore(1, 1);
-            _connectionString = !string.IsNullOrEmpty(connectionString) ? connectionString : throw new ArgumentNullException(nameof(connectionString));
         }
 
-        public async Task ConnectToBroker()
+        public async Task Connect(string connectionString)
         {
-            await _socket.ConnectToBroker(_connectionString);
+            await _socket.ConnectToBroker(connectionString);
         }
 
         public async Task CloseConnection()
@@ -33,7 +31,7 @@ namespace Producer.Services
             await _socket.CloseConnection();
         }
 
-        public async Task AddMessage(MessageHeader header, Message message)
+        public async Task Publish(MessageHeader header, Message message)
         {
             if (_batchingService.TryBatchMessage(header, message, out var queueKey))
             {
@@ -54,12 +52,11 @@ namespace Producer.Services
             _batchingService.CreateBatch(header, message, timer);
         }
 
-        public async Task SendMessage(byte[] message)
+        private async Task SendMessage(byte[] message)
         {
             _lock.WaitOne();
             await _socket.SendMessage(message);
             _lock.Release();
-
         }
     }
 }
