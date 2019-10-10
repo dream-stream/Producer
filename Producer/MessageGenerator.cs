@@ -17,7 +17,7 @@ namespace Producer
             {
                 messages[i] = new Message
                 {
-                    Address = PartitionKey.GetPartitionKey(),
+                    Address = Addresses.GetAddress(),
                     LocationDescription = "First floor bathroom",
                     Measurement = 23.5,
                     SensorType = "Temperature",
@@ -35,7 +35,7 @@ namespace Producer
             using SHA512 sha512 = new SHA512Managed();
             var hash = sha512.ComputeHash(message);
             
-            return (int)(Math.Abs(BitConverter.ToInt64(hash)) % partitions);
+            return (int)(Math.Abs(BitConverter.ToInt64(hash)) % partitions); //TODO Tryparse (Faster, better, stronger)
         }
     }
 }

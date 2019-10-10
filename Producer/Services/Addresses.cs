@@ -3,18 +3,18 @@ using System.IO;
 
 namespace Producer.Services
 {
-    public static class PartitionKey
+    public static class Addresses
     {
         private static readonly string[] Keys;
         private static readonly Random Rnd;
 
-        static PartitionKey()
+        static Addresses()
         {
             Keys = LoadKeys();
             Rnd = new Random();
         }
 
-        public static string GetPartitionKey()
+        public static string GetAddress()
         {
             return Keys[Rnd.Next(Keys.Length)];
         }
