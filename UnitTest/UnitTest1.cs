@@ -70,7 +70,7 @@ namespace UnitTest
         [Fact]
         public async Task ConcurrencyTest1() //TODO Test2 does not have a fair comparison
         {
-            var socket = new ProducerSocket();
+            var socket = new BrokerSocket();
             var (headers, messages) = MessageGenerator.GenerateMessages(100, 5);
             var stopWatch = new Stopwatch();
             var container = new MessageContainer[headers.Length];
@@ -142,13 +142,13 @@ namespace UnitTest
             }
 
             var tasks = new Task[data.Length];
-            var sockets = new ProducerSocket[data.Length];
+            var sockets = new BrokerSocket[data.Length];
 
 
             for (int i = 0; i < data.Length; i++)
             {
                 var i1 = i;
-                sockets[i] = new ProducerSocket();
+                sockets[i] = new BrokerSocket();
                 tasks[i] = new Task(async () =>
                 {
                     await sockets[i1].SendMessage(data[i1]);

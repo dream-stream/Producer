@@ -5,13 +5,15 @@ using System.Threading.Tasks;
 
 namespace Producer.Services
 {
-    public class ProducerSocket
+    public class BrokerSocket
     {
         private readonly ClientWebSocket _clientWebSocket;
+        private readonly Semaphore _lock;
 
-        public ProducerSocket()
+        public BrokerSocket()
         {
             _clientWebSocket = new ClientWebSocket();
+            _lock = new Semaphore(1, 1);
         }
 
         public async Task ConnectToBroker(string connectionString)
@@ -21,7 +23,9 @@ namespace Producer.Services
 
         public async Task SendMessage(byte[] message)
         {
+            _lock.WaitOne();
             await _clientWebSocket.SendAsync(new ArraySegment<byte>(message, 0, message.Length), WebSocketMessageType.Binary, false, CancellationToken.None);
+            _lock.Release();
         }
 
         public async Task CloseConnection()

@@ -16,11 +16,11 @@ namespace Producer.Services
             _messages = new Dictionary<MessageHeader, TimedBatchingQueue>();
         }
 
-        public bool TryBatchMessage(MessageHeader header, Message message, out MessageHeader fullQueue)
+        public bool TryBatchMessage(MessageHeader header, Message message, out MessageHeader queueFull)
         {
             if (!_messages.TryGetValue(header, out var list))
             {
-                fullQueue = null;
+                queueFull = null;
                 return false;
             }
 
@@ -31,7 +31,7 @@ namespace Producer.Services
                 list.Timer.Change(TimeSpan.FromSeconds(EnvironmentVariables.BatchTimerVariable), TimeSpan.FromSeconds(EnvironmentVariables.BatchTimerVariable));
             }
 
-            fullQueue = list.MessageContainer.Messages.Count == _batchingSize ? header : null;
+            queueFull = list.MessageContainer.Messages.Count == _batchingSize ? header : null;
             return true;
         }
 
