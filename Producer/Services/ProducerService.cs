@@ -81,7 +81,7 @@ namespace Producer.Services
             if (_batchingService.TryBatchMessage(header, message, out var queueFull))
             {
                 if (queueFull != null)
-                    await SendMessage(_serializer.Serialize(_batchingService.GetMessages(queueFull)), header);
+                    await SendMessage(_serializer.Serialize<IMessage>(_batchingService.GetMessages(queueFull)), header);
 
                 return;
             }
@@ -90,7 +90,8 @@ namespace Producer.Services
             {
                 var messages = _batchingService.GetMessages(header);
                 header.Print();
-                await SendMessage(_serializer.Serialize(messages), header);
+                await SendMessage(_serializer.Serialize<IMessage>(messages), header);
+
             });
             var timer = new Timer(callback, null, TimeSpan.FromSeconds(EnvironmentVariables.BatchTimerVariable), TimeSpan.FromSeconds(EnvironmentVariables.BatchTimerVariable));
 
