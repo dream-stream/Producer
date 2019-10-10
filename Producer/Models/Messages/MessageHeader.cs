@@ -4,7 +4,7 @@ using MessagePack;
 namespace Producer.Models.Messages
 {
     [MessagePackObject]
-    public class MessageHeader
+    public class MessageHeader : IMessage
     {
         [Key(1)]
         public string Topic { get; set; }
