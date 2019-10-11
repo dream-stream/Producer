@@ -27,7 +27,6 @@ namespace Producer.Services
             list.MessageContainer.Messages.Add(message);
             if (list.MessageContainer.Messages.Count == 1)
             {
-                Console.WriteLine("Timer started");
                 list.Timer.Change(TimeSpan.FromSeconds(EnvironmentVariables.BatchTimerVariable), TimeSpan.FromSeconds(EnvironmentVariables.BatchTimerVariable));
             }
 

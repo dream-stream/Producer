@@ -24,7 +24,7 @@ namespace Producer
                     Unit = "°C"
                 };
 
-                messageHeaders[i] = new MessageHeader{Topic = "SensorData", Partition = GetPartition(MessagePackSerializer.Serialize(messages[i].Address), partitions)};
+                messageHeaders[i] = new MessageHeader{Topic = "Topic1", Partition = GetPartition(MessagePackSerializer.Serialize(messages[i].Address), partitions)};
             }
 
             return (messageHeaders, messages);

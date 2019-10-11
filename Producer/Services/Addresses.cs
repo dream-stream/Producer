@@ -23,7 +23,7 @@ namespace Producer.Services
         {
             var path = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
-            return File.ReadAllLines(path + "\\addresses.csv");
+            return File.ReadAllLines(path + "/addresses.csv");
         }
     }
 }
