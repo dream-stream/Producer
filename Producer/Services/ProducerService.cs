@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.Serialization;
+using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 using dotnet_etcd;
@@ -46,8 +46,9 @@ namespace Producer.Services
         {
             if (_batchingService.TryBatchMessage(header, message, out var queueFull))
             {
-                if (queueFull != null)
-                    await SendMessage(_serializer.Serialize<IMessage>(_batchingService.GetMessages(queueFull)), header);
+                if (queueFull == null) return;
+                var messages = _batchingService.GetMessages(queueFull);
+                await TryToSendWithRetries(header, messages);
 
                 return;
             }
@@ -55,18 +56,39 @@ namespace Producer.Services
             var callback = new TimerCallback(async x =>
             {
                 var messages = _batchingService.GetMessages(header);
-                await SendMessage(_serializer.Serialize<IMessage>(messages), header);
-
+                await TryToSendWithRetries(header, messages);
             });
             var timer = new Timer(callback, null, TimeSpan.FromSeconds(EnvironmentVariables.BatchTimerVariable), TimeSpan.FromSeconds(EnvironmentVariables.BatchTimerVariable));
 
             _batchingService.CreateBatch(header, message, timer);
         }
 
+        private async Task TryToSendWithRetries(MessageHeader header, MessageContainer messages)
+        {
+            var errorCount = 0;
+            while (true)
+            {
+                try
+                {
+                    await SendMessage(_serializer.Serialize<IMessage>(messages), header);
+                    break;
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"SendMessage retry {++errorCount}");
+                    Thread.Sleep(1000);
+                    if (errorCount != 5) continue;
+                    Console.WriteLine("Failed to send after 5 retries", e);
+                    throw;
+                }
+            }
+        }
+
         private async Task SendMessage(byte[] message, MessageHeader header)
         {
             if (_brokerSocketsDict.TryGetValue($"{header.Topic}/{header.Partition}", out var brokerSocket))
             {
+                if(brokerSocket == null) throw new Exception("Failed to get brokerSocket");
                 await brokerSocket.SendMessage(message);
                 Console.WriteLine($"Sent batched messages to topic {header.Topic} with partition {header.Partition}");
             }
