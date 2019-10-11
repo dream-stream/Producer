@@ -18,6 +18,7 @@ namespace Producer.Services
 
         public async Task ConnectToBroker(string connectionString)
         {
+            Console.WriteLine($"Connecting to {connectionString}");
             await _clientWebSocket.ConnectAsync(new Uri(connectionString), CancellationToken.None);
         }
 
