@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: producer
-        image: dreamstream/producer
+        image: dreamstream/producer:26
         imagePullPolicy: Always
         ports:
         - containerPort: 80
