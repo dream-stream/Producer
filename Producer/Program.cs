@@ -10,7 +10,7 @@ namespace Producer
     {
         private static async Task Main()
         {
-            Console.WriteLine("This is the new version 2");
+            Console.WriteLine("This is the new version 3");
             var amountOfMessagesVariable = EnvironmentVariables.AmountOfMessagesVariable;
             var batchingSizeVariable = EnvironmentVariables.BatchingSizeVariable;
             var partitionAmountVariable = EnvironmentVariables.PartitionAmountVariable;
