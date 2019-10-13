@@ -33,14 +33,11 @@ stages:
         tags: |
           $(tag)
 - stage: Release
-  displayName: Release
   jobs:  
   - deployment: Release
-    displayName: Release
     pool: Anders
-    environment: 'smarthotel-dev'
+    environment: 'test'
     strategy:
-      # default deployment strategy
       runOnce:
         deploy:
           steps:
