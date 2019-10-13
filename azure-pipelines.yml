@@ -47,4 +47,4 @@ stages:
               namespace: default
               kubernetesServiceConnection: 'KubeAnders'
               manifests: manifests/deployment.yaml
-              containers: 'dreamstream/producer/$(tag)'
+              containers: 'dreamstream/producer:$(tag)'
