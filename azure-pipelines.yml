@@ -35,14 +35,19 @@ stages:
 - stage: Release
   displayName: Release
   jobs:  
-  - job: Release
+  - deployment: Release
     displayName: Release
     pool: Anders
-    steps:
-    - task: KubernetesManifest@0
-      inputs:
-        action: 'deploy'
-        namespace: default
-        kubernetesServiceConnection: 'KubeAnders'
-        manifests: manifests/deployment.yaml
-        containers: 'dreamstream/producer/$(tag)'
+    environment: 'smarthotel-dev'
+    strategy:
+      # default deployment strategy
+      runOnce:
+        deploy:
+          steps:
+          - task: KubernetesManifest@0
+            inputs:
+              action: 'deploy'
+              namespace: default
+              kubernetesServiceConnection: 'KubeAnders'
+              manifests: manifests/deployment.yaml
+              containers: 'dreamstream/producer/$(tag)'
