@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 using dotnet_etcd;
 using Producer.Models.Messages;
 using Producer.Serialization;
+using Prometheus;
 
 namespace Producer.Services
 {
@@ -16,6 +16,10 @@ namespace Producer.Services
         private BrokerSocket[] _brokerSockets;
         private readonly Dictionary<string, BrokerSocket> _brokerSocketsDict = new Dictionary<string, BrokerSocket>();
         private EtcdClient _client;
+
+        private static readonly Counter MessagesBatched = Metrics.CreateCounter("messages_batched", "Number of messages added to batch.");
+        private static readonly Counter MessageBatchesSent = Metrics.CreateCounter("message_batches_sent", "Number of batches sent.");
+
 
         public ProducerService(ISerializer serializer, BatchingService batchingService)
         {
@@ -44,6 +48,7 @@ namespace Producer.Services
 
         public async Task Publish(MessageHeader header, Message message)
         {
+            MessagesBatched.Inc();
             if (_batchingService.TryBatchMessage(header, message, out var queueFull))
             {
                 if (queueFull == null) return;
@@ -91,6 +96,7 @@ namespace Producer.Services
                 if(brokerSocket == null) throw new Exception("Failed to get brokerSocket");
                 await brokerSocket.SendMessage(message);
                 Console.WriteLine($"Sent batched messages to topic {header.Topic} with partition {header.Partition}");
+                MessageBatchesSent.Inc();
             }
             else 
                 throw new Exception("Failed to get brokerSocket");

@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using dotnet_etcd;
 using Producer.Serialization;
 using Producer.Services;
+using Prometheus;
 
 namespace Producer
 {
@@ -10,6 +11,10 @@ namespace Producer
     {
         private static async Task Main()
         {
+
+            var metricServer = new MetricServer(port: 80);
+            metricServer.Start();
+
             Console.WriteLine("This is the new version 3");
             var amountOfMessagesVariable = EnvironmentVariables.AmountOfMessagesVariable;
             var batchingSizeVariable = EnvironmentVariables.BatchingSizeVariable;
