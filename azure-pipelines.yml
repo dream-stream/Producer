@@ -1,7 +1,3 @@
-# Docker
-# Build a Docker image 
-# https://docs.microsoft.com/azure/devops/pipelines/languages/docker
-
 trigger:
 - master
 
@@ -19,7 +15,9 @@ stages:
   jobs:  
   - job: Build
     displayName: Build
-    pool: Anders
+    # pool: Anders
+    pool:
+      vmImage: 'ubuntu-latest'
     steps:
     - task: Docker@2
       displayName: Build an image
@@ -46,5 +44,5 @@ stages:
               action: 'deploy'
               namespace: default
               kubernetesServiceConnection: 'KubeAnders'
-              manifests: manifests/deployment.yaml
-              containers: 'dreamstream/producer:$(tag)'
+              manifests: manifests/*
+              containers: '$(image):$(tag)'
