@@ -24,6 +24,7 @@ namespace Producer.Services
         public static async Task UpdateBrokerSocketsDictionary(EtcdClient client, Dictionary<string, BrokerSocket> brokerSocketsDict, BrokerSocket[] brokerSockets)
         {
             var rangeVal = await client.GetRangeValAsync(TopicTablePrefix);
+            brokerSockets = await UpdateBrokerSockets(client, brokerSockets); // Force update, since sometimes it has not been updated.
             foreach (var (key, value) in rangeVal) AddToBrokerSocketsDictionary(brokerSocketsDict, brokerSockets, key, value);
 
             // This gives an Unhandled exception. System.NullReferenceException: Object reference not set to an instance of an object.
