@@ -72,7 +72,20 @@ namespace Producer.Services
         {
             var topicAndPartition = key.Substring(TopicTablePrefix.Length);
             var brokerNumber = GetBrokerNumber(value);
-            brokerSocketsDict[topicAndPartition] = brokerSockets[brokerNumber];
+
+            // Handling stuff race condition
+            if (brokerNumber >= brokerSockets.Length)
+            {
+                Console.WriteLine($"UPS!!! brokerNumber larger than brokerSockets.Length, {brokerNumber} {brokerSockets.Length}");
+
+                Console.WriteLine($"Ignoring!!!!!!! ");
+                Console.WriteLine($"Current key: {topicAndPartition} value: {brokerSocketsDict[topicAndPartition]}, should have been updated with broker number {brokerNumber}, but array only contains: ");
+                Array.ForEach(brokerSockets, Console.WriteLine);
+            }
+            else
+            {
+                brokerSocketsDict[topicAndPartition] = brokerSockets[brokerNumber];
+            }
         }
 
         public static async Task BrokerTableChangedHandler(WatchEvent[] watchEvents, BrokerSocket[] brokerSockets)
