@@ -120,6 +120,7 @@ namespace Producer.Services
 
         private static async Task CreateStartAndAddBroker(string brokerName, int brokerNumber, BrokerSocket[] brokerSockets)
         {
+            Console.WriteLine("CreateStartAndAddBroker");
             if (brokerSockets[brokerNumber] != null)
             {
                 if (await brokerSockets[brokerNumber].IsOpen())

@@ -56,6 +56,9 @@ namespace Producer.Services
         public async Task CloseConnection()
         {
             await _clientWebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Normal closure", CancellationToken.None);
+            Console.WriteLine("Closed the connection");
+            _clientWebSocket.Abort();
+            Console.WriteLine("Aborted the connection");
         }
     }
 }
