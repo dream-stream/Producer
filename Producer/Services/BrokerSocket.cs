@@ -27,21 +27,11 @@ namespace Producer.Services
             {
                 try
                 {
-                    //Console.WriteLine($"Current WebSocketState {_clientWebSocket.State}");
-                    //if (_clientWebSocket.State == WebSocketState.Open)
-                    //{
-                    //    Console.WriteLine($"Already connected to {connectionString}");
-                    //    break;
-                    //}
                     Console.WriteLine($"Connecting to {connectionString}");
                     await _clientWebSocket.ConnectAsync(new Uri(connectionString), CancellationToken.None);
                     ConnectedTo = connectionString;
                     break;
                 }
-                //catch (InvalidOperationException e)
-                //{
-                    
-                //}
                 catch (Exception e)
                 {
                     if (retries++ > MaxRetries) throw new Exception($"Failed to connect to WebSocket {connectionString} after {retries} retries.", e);

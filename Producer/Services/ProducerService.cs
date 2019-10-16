@@ -16,6 +16,7 @@ namespace Producer.Services
         private BrokerSocket[] _brokerSockets;
         private readonly Dictionary<string, BrokerSocket> _brokerSocketsDict = new Dictionary<string, BrokerSocket>();
         private EtcdClient _client;
+        private int maxRetryCount = 15;
 
         private static readonly Counter MessagesBatched = Metrics.CreateCounter("messages_batched", "Number of messages added to batch.", new CounterConfiguration
         {
@@ -95,9 +96,9 @@ namespace Producer.Services
                 catch (Exception e)
                 {
                     Console.WriteLine($"SendMessage retry {++errorCount}");
-                    Thread.Sleep(1000);
-                    if (errorCount != 5) continue;
-                    Console.WriteLine("Failed to send after 5 retries", e);
+                    Thread.Sleep(500*errorCount);
+                    if (errorCount != maxRetryCount) continue;
+                    Console.WriteLine($"Failed to send after {maxRetryCount} retries", e);
                     throw;
                 }
             }
