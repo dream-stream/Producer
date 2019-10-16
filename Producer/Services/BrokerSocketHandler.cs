@@ -43,7 +43,7 @@ namespace Producer.Services
             Console.WriteLine("PrintBrokerSocketsDict");
             foreach (var kv in brokerSocketsDict)
             {
-                Console.WriteLine($"Key: {kv.Key}, value: {kv.Value}");
+                Console.WriteLine($"Key: {kv.Key}, value: {kv.Value.ConnectedTo}");
             }
         }
 
