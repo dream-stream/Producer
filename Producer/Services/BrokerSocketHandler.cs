@@ -85,7 +85,8 @@ namespace Producer.Services
                 {
                     case Event.Types.EventType.Put:
                             AddToBrokerSocketsDictionary(brokerSocketsDict, brokerSockets, watchEvent.Key, watchEvent.Value);
-                            PrintBrokerSocketsDict(brokerSocketsDict);
+                            // This gives an Unhandled exception. System.NullReferenceException: Object reference not set to an instance of an object.
+                            //PrintBrokerSocketsDict(brokerSocketsDict);
                         break;
                     case Event.Types.EventType.Delete:
                         // Do nothing!!!
