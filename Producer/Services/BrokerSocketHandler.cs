@@ -121,16 +121,6 @@ namespace Producer.Services
         private static async Task CreateStartAndAddBroker(string brokerName, int brokerNumber, BrokerSocket[] brokerSockets)
         {
             Console.WriteLine("CreateStartAndAddBroker");
-            if (brokerSockets[brokerNumber] != null)
-            {
-                if (await brokerSockets[brokerNumber].IsOpen())
-                {
-                    Console.WriteLine($"Connection to {brokerName} is already open");
-                    return;
-                }
-                await brokerSockets[brokerNumber].CloseConnection();
-                Console.WriteLine($"Closing connection to {brokerName}");
-            }
             var brokerSocket = new BrokerSocket();
             var connectionString = EnvironmentVariables.IsDev ? "ws://localhost:5000/ws" : $"ws://{brokerName}.broker.default.svc.cluster.local/ws";
             await brokerSocket.ConnectToBroker(connectionString);

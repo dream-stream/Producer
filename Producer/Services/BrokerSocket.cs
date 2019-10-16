@@ -34,6 +34,7 @@ namespace Producer.Services
                 }
                 catch (Exception e)
                 {
+                    Console.WriteLine(e);
                     if (retries++ > MaxRetries) throw new Exception($"Failed to connect to WebSocket {connectionString} after {retries} retries.", e);
                     Console.WriteLine($"Trying to connect to {connectionString} retry {retries}");
                     Thread.Sleep(500 * retries);
