@@ -35,6 +35,16 @@ namespace Producer.Services
             foreach (var (key, value) in rangeVal) AddToBrokerSocketsDictionary(brokerSocketsDict, brokerSockets, key, value);
 
             UpdatePartitionCounterGauge(brokerSocketsDict);
+            PrintBrokerSocketsDict(brokerSocketsDict);
+        }
+
+        private static void PrintBrokerSocketsDict(Dictionary<string, BrokerSocket> brokerSocketsDict)
+        {
+            Console.WriteLine("PrintBrokerSocketsDict");
+            foreach (var kv in brokerSocketsDict)
+            {
+                Console.WriteLine($"Key: {kv.Key}, value: {kv.Value}");
+            }
         }
 
         // Anders shit code to count :)
@@ -92,6 +102,7 @@ namespace Producer.Services
                     case Event.Types.EventType.Put:
                             AddToBrokerSocketsDictionary(brokerSocketsDict, brokerSockets, watchEvent.Key, watchEvent.Value);
                             UpdatePartitionCounterGauge(brokerSocketsDict);
+                            PrintBrokerSocketsDict(brokerSocketsDict);
                         break;
                     case Event.Types.EventType.Delete:
                         // Do nothing!!!
