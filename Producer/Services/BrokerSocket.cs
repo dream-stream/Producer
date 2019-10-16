@@ -42,11 +42,6 @@ namespace Producer.Services
             }
         }
 
-        public async Task<bool> IsOpen()
-        {
-            return _clientWebSocket.State == WebSocketState.Open;
-        }
-
         public async Task SendMessage(byte[] message)
         {
             _lock.WaitOne();
@@ -60,6 +55,8 @@ namespace Producer.Services
             Console.WriteLine("Closed the connection");
             _clientWebSocket.Abort();
             Console.WriteLine("Aborted the connection");
+            _clientWebSocket.Dispose();
+            Console.WriteLine("Disposed the clientWebSocket");
         }
     }
 }
