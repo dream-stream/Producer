@@ -26,15 +26,16 @@ namespace Producer.Services
             var rangeVal = await client.GetRangeValAsync(TopicTablePrefix);
             foreach (var (key, value) in rangeVal) AddToBrokerSocketsDictionary(brokerSocketsDict, brokerSockets, key, value);
 
-            PrintBrokerSocketsDict(brokerSocketsDict);
+            // This gives an Unhandled exception. System.NullReferenceException: Object reference not set to an instance of an object.
+            //PrintBrokerSocketsDict(brokerSocketsDict);
         }
 
         private static void PrintBrokerSocketsDict(Dictionary<string, BrokerSocket> brokerSocketsDict)
         {
             Console.WriteLine("PrintBrokerSocketsDict");
-            foreach (var kv in brokerSocketsDict)
+            foreach (var (key, value) in brokerSocketsDict)
             {
-                Console.WriteLine($"Key: {kv.Key}, value: {kv.Value.ConnectedTo}");
+                Console.WriteLine($"Key: {key}, value: {value.ConnectedTo}");
             }
         }
 
@@ -43,7 +44,7 @@ namespace Producer.Services
             var topicAndPartition = key.Substring(TopicTablePrefix.Length);
             var brokerNumber = GetBrokerNumber(value);
 
-            // Handling stuff race condition
+            // Handling race condition
             if (brokerNumber >= brokerSockets.Length)
             {
                 Console.WriteLine($"UPS!!! brokerNumber larger than brokerSockets.Length, {brokerNumber} {brokerSockets.Length}");
