@@ -26,6 +26,8 @@ namespace Producer.Services
             LabelNames = new[] { "BrokerConnection" }
         });
 
+        private BrokerSocket _localhostBrokerSocket;
+
 
         public ProducerService(ISerializer serializer, BatchingService batchingService)
         {
@@ -40,6 +42,12 @@ namespace Producer.Services
             await BrokerSocketHandler.UpdateBrokerSocketsDictionary(client, _brokerSocketsDict, _brokerSockets);
             client.WatchRange(BrokerSocketHandler.BrokerTablePrefix, async events => await BrokerSocketHandler.BrokerTableChangedHandler(events, _brokerSockets));
             client.WatchRange(BrokerSocketHandler.TopicTablePrefix, events => BrokerSocketHandler.TopicTableChangedHandler(events, _brokerSocketsDict, _brokerSockets));
+        }
+
+        public async Task InitSocketLocalhost()
+        {
+            _localhostBrokerSocket = new BrokerSocket();
+            await _localhostBrokerSocket.ConnectToBroker("ws://localhost:5000/ws");
         }
 
         public async Task CloseConnections()
@@ -97,6 +105,12 @@ namespace Producer.Services
 
         private async Task SendMessage(byte[] message, MessageHeader header)
         {
+            if (EnvironmentVariables.IsDev)
+            {
+                await _localhostBrokerSocket.SendMessage(message);
+                return;
+            }
+
             if (_brokerSocketsDict.TryGetValue($"{header.Topic}/{header.Partition}", out var brokerSocket))
             {
                 if(brokerSocket == null) throw new Exception("Failed to get brokerSocket");

@@ -12,17 +12,24 @@ namespace Producer
         private static async Task Main()
         {
 
-            var metricServer = new MetricServer(port: 80);
-            metricServer.Start();
-
             Console.WriteLine("This is the new version 3");
             var amountOfMessagesVariable = EnvironmentVariables.AmountOfMessagesVariable;
             var batchingSizeVariable = EnvironmentVariables.BatchingSizeVariable;
             var partitionAmountVariable = EnvironmentVariables.PartitionAmountVariable;
 
             var producer = new ProducerService(new Serializer(), new BatchingService(batchingSizeVariable));
-            var client = EnvironmentVariables.IsDev ? new EtcdClient("http://localhost") : new EtcdClient("http://etcd");
-            await producer.InitSockets(client);
+
+            if (EnvironmentVariables.IsDev)
+            {
+                await producer.InitSocketLocalhost();
+            }
+            else
+            {
+                var metricServer = new MetricServer(port: 80);
+                metricServer.Start();
+                var client = EnvironmentVariables.IsDev ? new EtcdClient("http://localhost") : new EtcdClient("http://etcd");
+                await producer.InitSockets(client);
+            }
 
             AppDomain.CurrentDomain.ProcessExit += async (sender, e) => await producer.CloseConnections();
 
@@ -35,7 +42,7 @@ namespace Producer
                     await producer.Publish(messageHeaders[i], messages[i]);
                 }
 
-                await Task.Delay(15*1000); //Delay added for test of timer on batches
+                //await Task.Delay(15*1000); //Delay added for test of timer on batches
             }
         }
     }
