@@ -58,5 +58,10 @@ namespace Producer.Services
             _clientWebSocket.Dispose();
             Console.WriteLine("Disposed the clientWebSocket");
         }
+
+        public bool IsOpen()
+        {
+            return _clientWebSocket.State == WebSocketState.Open;
+        }
     }
 }

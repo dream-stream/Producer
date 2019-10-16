@@ -85,43 +85,45 @@ namespace Producer.Services
 
         private async Task TryToSendWithRetries(MessageHeader header, MessageContainer messages)
         {
-            var errorCount = 0;
-            while (true)
-            {
-                try
-                {
-                    await SendMessage(_serializer.Serialize<IMessage>(messages), header);
-                    break;
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine($"SendMessage retry {++errorCount}");
-                    Thread.Sleep(500*errorCount);
-                    if (errorCount != maxRetryCount) continue;
-                    Console.WriteLine($"Failed to send after {maxRetryCount} retries", e);
-                    throw;
-                }
-            }
+            //var errorCount = 0;
+            //while (true)
+            //{
+            //    try
+            //    {
+            //TODO For now just ignore messages failing to send.
+            if (!await SendMessage(_serializer.Serialize<IMessage>(messages), header)) Console.WriteLine("Failed to send messages");
+                //}
+                //catch (Exception e)
+                //{
+                //    Console.WriteLine($"SendMessage retry {++errorCount}");
+                //    Thread.Sleep(500*errorCount);
+                //    if (errorCount != maxRetryCount) continue;
+                //    Console.WriteLine($"Failed to send after {maxRetryCount} retries", e);
+                //    throw;
+                //}
+            //}
         }
 
-        private async Task SendMessage(byte[] message, MessageHeader header)
+        private async Task<bool> SendMessage(byte[] message, MessageHeader header)
         {
             if (EnvironmentVariables.IsDev)
             {
                 await _localhostBrokerSocket.SendMessage(message);
-                return;
+                return true;
             }
 
             if (_brokerSocketsDict.TryGetValue($"{header.Topic}/{header.Partition}", out var brokerSocket))
             {
                 if(brokerSocket == null) throw new Exception("Failed to get brokerSocket");
+                if(!brokerSocket.IsOpen()) return false;
                 await brokerSocket.SendMessage(message);
                 Console.WriteLine($"Sent batched messages to topic {header.Topic} with partition {header.Partition}");
                 MessageBatchesSent.WithLabels(brokerSocket.ConnectedTo).Inc();
                 MessageBatchesSent.WithLabels($"{header.Topic}/{header.Partition}").Inc();
+                return true;
             }
-            else 
-                throw new Exception("Failed to get brokerSocket");
+
+            throw new Exception("Failed to get brokerSocket");
         }
     }
 }
