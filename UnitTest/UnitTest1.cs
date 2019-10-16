@@ -27,7 +27,7 @@ namespace UnitTest
         public void SerializeWholeMessageVsHeaderAndMessage()
         {
             var stopWatch1 = new Stopwatch();
-            var (headers, messages) = MessageGenerator.GenerateMessages(200, 1);
+            var (headers, messages) = MessageGenerator.GenerateMessages(200, 1, "Topic1");
             var header = new MessageHeader { Topic = "Topic1", Partition = 1 };
             var serializer = new Serializer();
             var container = new MessageContainer
@@ -48,7 +48,7 @@ namespace UnitTest
         public void Serialization2()
         {
             var stopWatch = new Stopwatch();
-            var (headers, messages) = MessageGenerator.GenerateMessages(200, 1);
+            var (headers, messages) = MessageGenerator.GenerateMessages(200, 1, "Topic1");
             var header = new MessageHeader { Topic = "Topic1", Partition = 1 };
             var serializer = new Serializer();
             var container = new MessageContainer
@@ -71,7 +71,7 @@ namespace UnitTest
         public async Task ConcurrencyTest1() //TODO Test2 does not have a fair comparison
         {
             var socket = new BrokerSocket();
-            var (headers, messages) = MessageGenerator.GenerateMessages(100, 5);
+            var (headers, messages) = MessageGenerator.GenerateMessages(200, 1, "Topic1");
             var stopWatch = new Stopwatch();
             var container = new MessageContainer[headers.Length];
             var semaphore = new Semaphore(1, 1);
@@ -121,7 +121,7 @@ namespace UnitTest
         [Fact]
         public async Task ConcurrencyTest2() //TODO Not a fair comparison
         {
-            var (headers, messages) = MessageGenerator.GenerateMessages(100, 5);
+            var (headers, messages) = MessageGenerator.GenerateMessages(200, 1, "Topic1");
             var stopWatch = new Stopwatch();
             var container = new MessageContainer[headers.Length];
             var semaphore = new Semaphore(1, 1);

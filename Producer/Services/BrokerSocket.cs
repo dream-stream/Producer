@@ -20,7 +20,7 @@ namespace Producer.Services
             _lock = new Semaphore(1, 1);
         }
 
-        public async Task ConnectToBroker(string connectionString, int retries)
+        public async Task ConnectToBroker(string connectionString, int retries = 0)
         {
             try
             {
