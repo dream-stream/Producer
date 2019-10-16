@@ -17,7 +17,10 @@ namespace Producer.Services
         private readonly Dictionary<string, BrokerSocket> _brokerSocketsDict = new Dictionary<string, BrokerSocket>();
         private EtcdClient _client;
 
-        private static readonly Counter MessagesBatched = Metrics.CreateCounter("messages_batched", "Number of messages added to batch.");
+        private static readonly Counter MessagesBatched = Metrics.CreateCounter("messages_batched", "Number of messages added to batch.", new CounterConfiguration
+        {
+            LabelNames = new []{"TopicPartition"}
+        });
         private static readonly Counter MessageBatchesSent = Metrics.CreateCounter("message_batches_sent", "Number of batches sent.");
 
 
@@ -48,7 +51,7 @@ namespace Producer.Services
 
         public async Task Publish(MessageHeader header, Message message)
         {
-            MessagesBatched.Inc();
+            MessagesBatched.WithLabels($"{header.Topic}/{header.Partition}").Inc();
             if (_batchingService.TryBatchMessage(header, message, out var queueFull))
             {
                 if (queueFull == null) return;
