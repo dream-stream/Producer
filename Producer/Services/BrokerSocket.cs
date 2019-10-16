@@ -33,6 +33,7 @@ namespace Producer.Services
                 if(retries++ > MaxRetries) throw new Exception($"Failed to connect to WebSocket {connectionString} after {retries} retries.", e);
                 Console.WriteLine($"Trying to connect to {connectionString} retry {retries}");
                 Thread.Sleep(500*retries);
+                await ConnectToBroker(connectionString, retries);
             }
 
         }
