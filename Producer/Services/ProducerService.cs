@@ -21,7 +21,10 @@ namespace Producer.Services
         {
             LabelNames = new []{"TopicPartition"}
         });
-        private static readonly Counter MessageBatchesSent = Metrics.CreateCounter("message_batches_sent", "Number of batches sent.");
+        private static readonly Counter MessageBatchesSent = Metrics.CreateCounter("message_batches_sent", "Number of batches sent.", new CounterConfiguration
+        {
+            LabelNames = new[] { "BrokerConnection" }
+        });
 
 
         public ProducerService(ISerializer serializer, BatchingService batchingService)
@@ -99,7 +102,7 @@ namespace Producer.Services
                 if(brokerSocket == null) throw new Exception("Failed to get brokerSocket");
                 await brokerSocket.SendMessage(message);
                 Console.WriteLine($"Sent batched messages to topic {header.Topic} with partition {header.Partition}");
-                MessageBatchesSent.Inc();
+                MessageBatchesSent.WithLabels(brokerSocket.ConnectedTo).Inc();
             }
             else 
                 throw new Exception("Failed to get brokerSocket");

@@ -10,6 +10,8 @@ namespace Producer.Services
         private readonly ClientWebSocket _clientWebSocket;
         private readonly Semaphore _lock;
 
+        public string ConnectedTo { get; set; }
+
         public BrokerSocket()
         {
             _clientWebSocket = new ClientWebSocket();
@@ -20,6 +22,7 @@ namespace Producer.Services
         {
             Console.WriteLine($"Connecting to {connectionString}");
             await _clientWebSocket.ConnectAsync(new Uri(connectionString), CancellationToken.None);
+            ConnectedTo = connectionString;
         }
 
         public async Task SendMessage(byte[] message)
