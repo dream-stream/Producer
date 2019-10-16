@@ -4,19 +4,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using dotnet_etcd;
 using Mvccpb;
-using Prometheus;
 
 namespace Producer.Services
 {
     public class BrokerSocketHandler
     {
-        private static readonly Gauge PartitionCounterGauge = Metrics
-            .CreateGauge("partition_counter_gauge", "Number of partitions assigned to each broker local.", new GaugeConfiguration
-            {
-                LabelNames = new []{"Broker"}
-            });
-
-
         public const string TopicTablePrefix = "Topic/";
         public const string BrokerTablePrefix = "Broker/";
 
@@ -34,7 +26,6 @@ namespace Producer.Services
             var rangeVal = await client.GetRangeValAsync(TopicTablePrefix);
             foreach (var (key, value) in rangeVal) AddToBrokerSocketsDictionary(brokerSocketsDict, brokerSockets, key, value);
 
-            UpdatePartitionCounterGauge(brokerSocketsDict);
             PrintBrokerSocketsDict(brokerSocketsDict);
         }
 
@@ -44,27 +35,6 @@ namespace Producer.Services
             foreach (var kv in brokerSocketsDict)
             {
                 Console.WriteLine($"Key: {kv.Key}, value: {kv.Value.ConnectedTo}");
-            }
-        }
-
-        // Anders shit code to count :)
-        private static void UpdatePartitionCounterGauge(Dictionary<string, BrokerSocket> brokerSocketsDict)
-        {
-            var partitionCountForBroker = new Dictionary<string, int>();
-            foreach (var (_, value) in brokerSocketsDict)
-            {
-                if (partitionCountForBroker.TryGetValue(value.ConnectedTo, out _)) partitionCountForBroker[value.ConnectedTo]++;
-                else partitionCountForBroker[value.ConnectedTo] = 1;
-            }
-
-            foreach (var labelName in PartitionCounterGauge.LabelNames)
-            {
-                PartitionCounterGauge.WithLabels(labelName).Set(0);
-            }
-
-            foreach (var (key, value) in partitionCountForBroker)
-            {
-                PartitionCounterGauge.WithLabels(key).Set(value);
             }
         }
 
@@ -114,7 +84,6 @@ namespace Producer.Services
                 {
                     case Event.Types.EventType.Put:
                             AddToBrokerSocketsDictionary(brokerSocketsDict, brokerSockets, watchEvent.Key, watchEvent.Value);
-                            UpdatePartitionCounterGauge(brokerSocketsDict);
                             PrintBrokerSocketsDict(brokerSocketsDict);
                         break;
                     case Event.Types.EventType.Delete:
