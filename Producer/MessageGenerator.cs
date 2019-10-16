@@ -8,7 +8,7 @@ namespace Producer
 {
     public static class MessageGenerator
     {
-        public static (MessageHeader[], Message[]) GenerateMessages(int amount, long partitions)
+        public static (MessageHeader[], Message[]) GenerateMessages(int amount, long partitions, string topic)
         {
             var messages = new Message[amount];
             var messageHeaders = new MessageHeader[amount];
@@ -24,7 +24,7 @@ namespace Producer
                     Unit = "°C"
                 };
 
-                messageHeaders[i] = new MessageHeader{Topic = "Topic2", Partition = GetPartition(MessagePackSerializer.Serialize(messages[i].Address), partitions)};
+                messageHeaders[i] = new MessageHeader{Topic = topic, Partition = GetPartition(MessagePackSerializer.Serialize(messages[i].Address), partitions)};
             }
 
             return (messageHeaders, messages);

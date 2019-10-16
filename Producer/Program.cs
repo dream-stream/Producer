@@ -15,13 +15,15 @@ namespace Producer
             Console.WriteLine("This is the new version 3");
             var amountOfMessagesVariable = EnvironmentVariables.AmountOfMessagesVariable;
             var batchingSizeVariable = EnvironmentVariables.BatchingSizeVariable;
-            var partitionAmountVariable = EnvironmentVariables.PartitionAmountVariable;
 
             var producer = new ProducerService(new Serializer(), new BatchingService(batchingSizeVariable));
-
+            
+            const string topic = "Topic2";
+            int partitionCount;
             if (EnvironmentVariables.IsDev)
             {
                 await producer.InitSocketLocalhost();
+                partitionCount = 10;
             }
             else
             {
@@ -29,13 +31,13 @@ namespace Producer
                 metricServer.Start();
                 var client = EnvironmentVariables.IsDev ? new EtcdClient("http://localhost") : new EtcdClient("http://etcd");
                 await producer.InitSockets(client);
+                partitionCount = await TopicList.GetPartitionCount(client, topic);
             }
 
             AppDomain.CurrentDomain.ProcessExit += async (sender, e) => await producer.CloseConnections();
-
             while (true)
             {
-                var (messageHeaders, messages) = MessageGenerator.GenerateMessages(amountOfMessagesVariable, partitionAmountVariable);
+                var (messageHeaders, messages) = MessageGenerator.GenerateMessages(amountOfMessagesVariable, partitionCount, topic);
 
                 for (var i = 0; i < messageHeaders.Length; i++)
                 {
