@@ -42,7 +42,7 @@ namespace Producer
                     await producer.Publish(messageHeaders[i], messages[i]);
                 }
 
-                //await Task.Delay(15*1000); //Delay added for test of timer on batches
+                await Task.Delay(15 * 1000); //Delay added for test of timer on batches
             }
         }
     }
