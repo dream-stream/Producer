@@ -103,6 +103,7 @@ namespace Producer.Services
                 await brokerSocket.SendMessage(message);
                 Console.WriteLine($"Sent batched messages to topic {header.Topic} with partition {header.Partition}");
                 MessageBatchesSent.WithLabels(brokerSocket.ConnectedTo).Inc();
+                MessageBatchesSent.WithLabels($"{header.Topic}/{header.Partition}").Inc();
             }
             else 
                 throw new Exception("Failed to get brokerSocket");
