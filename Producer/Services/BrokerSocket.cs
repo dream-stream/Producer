@@ -12,7 +12,7 @@ namespace Producer.Services
 
         public string ConnectedTo { get; set; }
 
-        private const int MaxRetries = 5;
+        private const int MaxRetries = 15;
 
         public BrokerSocket()
         {
