@@ -27,6 +27,7 @@ namespace Producer.Services
             {
                 try
                 {
+                    Console.WriteLine($"Current WebSocketState {_clientWebSocket.State}");
                     if (_clientWebSocket.State == WebSocketState.Open)
                     {
                         Console.WriteLine($"Already connected to {connectionString}");
