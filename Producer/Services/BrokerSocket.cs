@@ -12,17 +12,29 @@ namespace Producer.Services
 
         public string ConnectedTo { get; set; }
 
+        private const int MaxRetries = 5;
+
         public BrokerSocket()
         {
             _clientWebSocket = new ClientWebSocket();
             _lock = new Semaphore(1, 1);
         }
 
-        public async Task ConnectToBroker(string connectionString)
+        public async Task ConnectToBroker(string connectionString, int retries)
         {
-            Console.WriteLine($"Connecting to {connectionString}");
-            await _clientWebSocket.ConnectAsync(new Uri(connectionString), CancellationToken.None);
-            ConnectedTo = connectionString;
+            try
+            {
+                Console.WriteLine($"Connecting to {connectionString}");
+                await _clientWebSocket.ConnectAsync(new Uri(connectionString), CancellationToken.None);
+                ConnectedTo = connectionString;
+            }
+            catch (Exception e)
+            {
+                if(retries++ > MaxRetries) throw new Exception($"Failed to connect to WebSocket {connectionString} after {retries} retries.", e);
+                Console.WriteLine($"Trying to connect to {connectionString} retry {retries}");
+                Thread.Sleep(500*retries);
+            }
+
         }
 
         public async Task SendMessage(byte[] message)
