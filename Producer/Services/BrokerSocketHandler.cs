@@ -69,10 +69,10 @@ namespace Producer.Services
                 switch (watchEvent.Type)
                 {
                     case Event.Types.EventType.Put:
-                        await AddBroker(watchEvent.Key, brokerSockets);
+                        brokerSockets = await AddBroker(watchEvent.Key, brokerSockets);
                         break;
                     case Event.Types.EventType.Delete:
-                        await RemoveBroker(watchEvent, brokerSockets);
+                        brokerSockets = await RemoveBroker(watchEvent, brokerSockets);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
@@ -109,14 +109,15 @@ namespace Producer.Services
             }
         }
 
-        public static async Task RemoveBroker(WatchEvent watchEvent, BrokerSocket[] brokerSockets)
+        public static async Task<BrokerSocket[]> RemoveBroker(WatchEvent watchEvent, BrokerSocket[] brokerSockets)
         {
             var brokerNumber = GetBrokerNumber(watchEvent.Key);
             await brokerSockets[brokerNumber].CloseConnection();
             brokerSockets[brokerNumber] = null;
+            return brokerSockets;
         }
 
-        public static async Task AddBroker(string keyString, BrokerSocket[] brokerSockets)
+        public static async Task<BrokerSocket[]> AddBroker(string keyString, BrokerSocket[] brokerSockets)
         {
             var brokerNumber = GetBrokerNumber(keyString);
             var brokerName = GetBrokerName(keyString);
@@ -133,6 +134,8 @@ namespace Producer.Services
                 Console.WriteLine($"Added Broker after resize {brokerName}\nBrokerSockets: ");
                 Array.ForEach(brokerSockets, Console.WriteLine);
             }
+
+            return brokerSockets;
         }
 
         private static async Task CreateStartAndAddBroker(string brokerName, int brokerNumber, BrokerSocket[] brokerSockets)
