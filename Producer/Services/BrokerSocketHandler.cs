@@ -87,9 +87,11 @@ namespace Producer.Services
                 switch (watchEvent.Type)
                 {
                     case Event.Types.EventType.Put:
-                            AddToBrokerSocketsDictionary(brokerSocketsDict, brokerSockets, watchEvent.Key, watchEvent.Value);
-                            // This gives an Unhandled exception. System.NullReferenceException: Object reference not set to an instance of an object.
-                            //PrintBrokerSocketsDict(brokerSocketsDict);
+                        Console.WriteLine("ANDERS!!!");
+                        Array.ForEach(brokerSockets, socket =>  Console.WriteLine($"{socket.ConnectedTo} {socket.IsOpen()}"));
+                        AddToBrokerSocketsDictionary(brokerSocketsDict, brokerSockets, watchEvent.Key, watchEvent.Value);
+                        // This gives an Unhandled exception. System.NullReferenceException: Object reference not set to an instance of an object.
+                        //PrintBrokerSocketsDict(brokerSocketsDict);
                         break;
                     case Event.Types.EventType.Delete:
                         // Do nothing!!!
