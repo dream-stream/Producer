@@ -27,7 +27,7 @@ namespace Producer
             }
             else
             {
-                var metricServer = new MetricServer(port: 80);
+                var metricServer = new MetricServer(80);
                 metricServer.Start();
                 var client = EnvironmentVariables.IsDev ? new EtcdClient("http://localhost") : new EtcdClient("http://etcd");
                 await producer.InitSockets(client);
