@@ -32,11 +32,6 @@ namespace Producer.Services
                     ConnectedTo = connectionString;
                     break;
                 }
-                catch (InvalidOperationException e)
-                {
-                    Console.WriteLine($"ANDERS:{e.Message}");
-                    if(e.Message == "The WebSocket has already been started.") break;
-                }
                 catch (Exception e)
                 {
                     Console.WriteLine(e);
