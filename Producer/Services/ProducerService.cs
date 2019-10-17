@@ -16,8 +16,8 @@ namespace Producer.Services
         private BrokerSocket[] _brokerSockets;
         private readonly Dictionary<string, BrokerSocket> _brokerSocketsDict = new Dictionary<string, BrokerSocket>();
         private EtcdClient _client;
-        private int maxRetryCount = 15;
-        private Semaphore _brokerSocketHandlerLock = new Semaphore(1,1);
+        private const int MaxRetries = 5;
+        private readonly Semaphore _brokerSocketHandlerLock = new Semaphore(1,1);
 
         private static readonly Counter MessagesBatched = Metrics.CreateCounter("messages_batched", "Number of messages added to batch.", new CounterConfiguration
         {
@@ -96,32 +96,22 @@ namespace Producer.Services
 
         private async Task TryToSendWithRetries(MessageHeader header, MessageContainer messages)
         {
-            //var errorCount = 0;
-            //while (true)
-            //{
-            //    try
-            //    {
-            //TODO For now just ignore messages failing to send.
-            if (!await SendMessage(_serializer.Serialize<IMessage>(messages), header)) Console.WriteLine("Failed to send messages");
-                //}
-                //catch (Exception e)
-                //{
-                //    Console.WriteLine($"SendMessage retry {++errorCount}");
-                //    Thread.Sleep(500*errorCount);
-                //    if (errorCount != maxRetryCount) continue;
-                //    Console.WriteLine($"Failed to send after {maxRetryCount} retries", e);
-                //    throw;
-                //}
-            //}
+            var retries = 0;
+            while (retries < MaxRetries)
+            {
+                if (await SendMessage(_serializer.Serialize<IMessage>(messages), header)) break;
+                Console.WriteLine($"SendMessage retry {++retries}");
+                Thread.Sleep(500 * retries);
+            }
         }
 
         private async Task<bool> SendMessage(byte[] message, MessageHeader header)
         {
-            //if (EnvironmentVariables.IsDev)
-            //{
-            //    await _localhostBrokerSocket.SendMessage(message);
-            //    return true;
-            //}
+            if (EnvironmentVariables.IsDev)
+            {
+                await _localhostBrokerSocket.SendMessage(message);
+                return true;
+            }
 
             if (_brokerSocketsDict.TryGetValue($"{header.Topic}/{header.Partition}", out var brokerSocket))
             {

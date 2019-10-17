@@ -37,10 +37,8 @@ namespace Producer.Services
 
         public static async Task<BrokerSocket[]> BrokerTableChangedHandler(WatchEvent[] watchEvents, BrokerSocket[] brokerSockets)
         {
-            Console.WriteLine("BrokerTableChangedHandler");
             foreach (var watchEvent in watchEvents)
             {
-                Console.WriteLine($"BrokerTableChangedHandler 2 {watchEvent.Type}");
                 switch (watchEvent.Type)
                 {
                     case Event.Types.EventType.Put:
@@ -81,7 +79,7 @@ namespace Producer.Services
             var brokerNumber = GetBrokerNumber(watchEvent.Key);
             await brokerSockets[brokerNumber].CloseConnection();
             brokerSockets[brokerNumber] = null;
-            Console.WriteLine($"Removed Broker number {brokerNumber}");
+            Console.WriteLine($"Removed Broker {brokerNumber}");
             PrintBrokerSockets(brokerSockets);
             return brokerSockets;
         }
