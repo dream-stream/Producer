@@ -90,7 +90,11 @@ namespace Producer.Services
                 {
                     case Event.Types.EventType.Put:
                         Console.WriteLine("ANDERS!!!");
-                        Array.ForEach(brokerSockets, socket =>  Console.WriteLine($"{socket.ConnectedTo} {socket.IsOpen()}"));
+                        Array.ForEach(brokerSockets, socket =>
+                        {
+                            if(socket != null)
+                                Console.WriteLine($"{socket.ConnectedTo} {socket.IsOpen()}");
+                        });
                         AddToBrokerSocketsDictionary(brokerSocketsDict, brokerSockets, watchEvent.Key, watchEvent.Value);
                         // This gives an Unhandled exception. System.NullReferenceException: Object reference not set to an instance of an object.
                         //PrintBrokerSocketsDict(brokerSocketsDict);
