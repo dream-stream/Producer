@@ -105,7 +105,7 @@ namespace Producer.Services
             Console.WriteLine("Current BrokerSockets:");
             Array.ForEach(brokerSockets, socket =>
             {
-                if (socket != null) Console.WriteLine($"{socket.ConnectedTo} {socket.IsOpen()}");
+                if (socket != null) Console.WriteLine($"{socket.ConnectedTo} - StateIsOpen: {socket.IsOpen()}");
             });
         }
 
