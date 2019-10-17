@@ -110,12 +110,18 @@ namespace Producer.Services
         {
             var brokerNumber = GetBrokerNumber(keyString);
             var brokerName = GetBrokerName(keyString);
-            if (brokerSockets.Length > brokerNumber) 
+            if (brokerSockets.Length > brokerNumber)
+            {
                 await CreateStartAndAddBroker(brokerName, brokerNumber, brokerSockets);
+                Console.WriteLine($"Added Broker {brokerName}\nBrokerSockets: ");
+                Array.ForEach(brokerSockets, Console.WriteLine);
+            }
             else
             {
                 Array.Resize(ref brokerSockets, brokerNumber + 1);
                 await CreateStartAndAddBroker(brokerName, brokerNumber, brokerSockets);
+                Console.WriteLine($"Added Broker after resize {brokerName}\nBrokerSockets: ");
+                Array.ForEach(brokerSockets, Console.WriteLine);
             }
         }
 
