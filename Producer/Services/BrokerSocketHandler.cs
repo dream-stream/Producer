@@ -62,8 +62,10 @@ namespace Producer.Services
 
         public static async Task BrokerTableChangedHandler(WatchEvent[] watchEvents, BrokerSocket[] brokerSockets)
         {
+            Console.WriteLine("BrokerTableChangedHandler");
             foreach (var watchEvent in watchEvents)
             {
+                Console.WriteLine($"BrokerTableChangedHandler 2 {watchEvent.Type}");
                 switch (watchEvent.Type)
                 {
                     case Event.Types.EventType.Put:
