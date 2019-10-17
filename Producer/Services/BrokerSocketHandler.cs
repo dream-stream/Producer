@@ -24,20 +24,7 @@ namespace Producer.Services
         public static async Task UpdateBrokerSocketsDictionary(EtcdClient client, Dictionary<string, BrokerSocket> brokerSocketsDict, BrokerSocket[] brokerSockets)
         {
             var rangeVal = await client.GetRangeValAsync(TopicTablePrefix);
-            brokerSockets = await UpdateBrokerSockets(client, brokerSockets); // Force update, since sometimes it has not been updated.
             foreach (var (key, value) in rangeVal) AddToBrokerSocketsDictionary(brokerSocketsDict, brokerSockets, key, value);
-
-            // This gives an Unhandled exception. System.NullReferenceException: Object reference not set to an instance of an object.
-            //PrintBrokerSocketsDict(brokerSocketsDict);
-        }
-
-        private static void PrintBrokerSocketsDict(Dictionary<string, BrokerSocket> brokerSocketsDict)
-        {
-            Console.WriteLine("PrintBrokerSocketsDict");
-            foreach (var (key, value) in brokerSocketsDict)
-            {
-                Console.WriteLine($"Key: {key}, value: {value.ConnectedTo}");
-            }
         }
 
         private static void AddToBrokerSocketsDictionary(IDictionary<string, BrokerSocket> brokerSocketsDict, BrokerSocket[] brokerSockets, string key, string value)
@@ -45,19 +32,7 @@ namespace Producer.Services
             var topicAndPartition = key.Substring(TopicTablePrefix.Length);
             var brokerNumber = GetBrokerNumber(value);
 
-            // Handling race condition
-            if (brokerNumber >= brokerSockets.Length)
-            {
-                Console.WriteLine($"UPS!!! brokerNumber larger than brokerSockets.Length, {brokerNumber} {brokerSockets.Length}");
-
-                Console.WriteLine($"Ignoring!!!!!!! ");
-                Console.WriteLine($"Current key: {topicAndPartition} value: {brokerSocketsDict[topicAndPartition]}, should have been updated with broker number {brokerNumber}, but array only contains: ");
-                Array.ForEach(brokerSockets, Console.WriteLine);
-            }
-            else
-            {
-                brokerSocketsDict[topicAndPartition] = brokerSockets[brokerNumber];
-            }
+            brokerSocketsDict[topicAndPartition] = brokerSockets[brokerNumber];
         }
 
         public static async Task<BrokerSocket[]> BrokerTableChangedHandler(WatchEvent[] watchEvents, BrokerSocket[] brokerSockets)
@@ -89,15 +64,7 @@ namespace Producer.Services
                 switch (watchEvent.Type)
                 {
                     case Event.Types.EventType.Put:
-                        Console.WriteLine("ANDERS!!!");
-                        Array.ForEach(brokerSockets, socket =>
-                        {
-                            if(socket != null)
-                                Console.WriteLine($"{socket.ConnectedTo} {socket.IsOpen()}");
-                        });
                         AddToBrokerSocketsDictionary(brokerSocketsDict, brokerSockets, watchEvent.Key, watchEvent.Value);
-                        // This gives an Unhandled exception. System.NullReferenceException: Object reference not set to an instance of an object.
-                        //PrintBrokerSocketsDict(brokerSocketsDict);
                         break;
                     case Event.Types.EventType.Delete:
                         // Do nothing!!!
@@ -114,6 +81,8 @@ namespace Producer.Services
             var brokerNumber = GetBrokerNumber(watchEvent.Key);
             await brokerSockets[brokerNumber].CloseConnection();
             brokerSockets[brokerNumber] = null;
+            Console.WriteLine($"Removed Broker number {brokerNumber}");
+            PrintBrokerSockets(brokerSockets);
             return brokerSockets;
         }
 
@@ -121,26 +90,29 @@ namespace Producer.Services
         {
             var brokerNumber = GetBrokerNumber(keyString);
             var brokerName = GetBrokerName(keyString);
-            if (brokerSockets.Length > brokerNumber)
-            {
-                await CreateStartAndAddBroker(brokerName, brokerNumber, brokerSockets);
-                Console.WriteLine($"Added Broker {brokerName}\nBrokerSockets: ");
-                Array.ForEach(brokerSockets, Console.WriteLine);
-            }
-            else
+            if (brokerSockets.Length <= brokerNumber)
             {
                 Array.Resize(ref brokerSockets, brokerNumber + 1);
-                await CreateStartAndAddBroker(brokerName, brokerNumber, brokerSockets);
-                Console.WriteLine($"Added Broker after resize {brokerName}\nBrokerSockets: ");
-                Array.ForEach(brokerSockets, Console.WriteLine);
+                Console.WriteLine("Resized brokerSockets");
             }
+            await CreateStartAndAddBroker(brokerName, brokerNumber, brokerSockets);
+            Console.WriteLine($"Added Broker {brokerName}");
+            PrintBrokerSockets(brokerSockets);
 
             return brokerSockets;
         }
 
+        private static void PrintBrokerSockets(BrokerSocket[] brokerSockets)
+        {
+            Console.WriteLine("Current BrokerSockets:");
+            Array.ForEach(brokerSockets, socket =>
+            {
+                if (socket != null) Console.WriteLine($"{socket.ConnectedTo} {socket.IsOpen()}");
+            });
+        }
+
         private static async Task CreateStartAndAddBroker(string brokerName, int brokerNumber, BrokerSocket[] brokerSockets)
         {
-            Console.WriteLine("CreateStartAndAddBroker");
             var brokerSocket = new BrokerSocket();
             var connectionString = EnvironmentVariables.IsDev ? "ws://localhost:5000/ws" : $"ws://{brokerName}.broker.default.svc.cluster.local/ws";
             await brokerSocket.ConnectToBroker(connectionString);
