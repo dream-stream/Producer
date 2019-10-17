@@ -20,19 +20,19 @@ namespace Producer
             
             const string topic = "Topic2";
             int partitionCount;
-            if (EnvironmentVariables.IsDev)
-            {
-                await producer.InitSocketLocalhost();
-                partitionCount = 10;
-            }
-            else
-            {
-                var metricServer = new MetricServer(port: 80);
-                metricServer.Start();
+            //if (EnvironmentVariables.IsDev)
+            //{
+            //    await producer.InitSocketLocalhost();
+            //    partitionCount = 10;
+            //}
+            //else
+            //{
+                //var metricServer = new MetricServer(port: 80);
+                //metricServer.Start();
                 var client = EnvironmentVariables.IsDev ? new EtcdClient("http://localhost") : new EtcdClient("http://etcd");
                 await producer.InitSockets(client);
                 partitionCount = await TopicList.GetPartitionCount(client, topic);
-            }
+            //}
 
             AppDomain.CurrentDomain.ProcessExit += async (sender, e) => await producer.CloseConnections();
             while (true)

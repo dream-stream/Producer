@@ -78,6 +78,8 @@ namespace Producer.Services
                         throw new ArgumentOutOfRangeException();
                 }
             }
+
+            return brokerSockets;
         }
 
         public static void TopicTableChangedHandler(WatchEvent[] watchEvents, Dictionary<string, BrokerSocket> brokerSocketsDict, BrokerSocket[] brokerSockets)

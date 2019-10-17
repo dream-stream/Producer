@@ -17,6 +17,7 @@ namespace Producer.Services
         private readonly Dictionary<string, BrokerSocket> _brokerSocketsDict = new Dictionary<string, BrokerSocket>();
         private EtcdClient _client;
         private int maxRetryCount = 15;
+        private Semaphore _brokerSocketHandlerLock = new Semaphore(1,1);
 
         private static readonly Counter MessagesBatched = Metrics.CreateCounter("messages_batched", "Number of messages added to batch.", new CounterConfiguration
         {
@@ -41,8 +42,18 @@ namespace Producer.Services
             _client = client;
             _brokerSockets = await BrokerSocketHandler.UpdateBrokerSockets(client, _brokerSockets);
             await BrokerSocketHandler.UpdateBrokerSocketsDictionary(client, _brokerSocketsDict, _brokerSockets);
-            client.WatchRange(BrokerSocketHandler.BrokerTablePrefix, async events => await BrokerSocketHandler.BrokerTableChangedHandler(events, _brokerSockets));
-            client.WatchRange(BrokerSocketHandler.TopicTablePrefix, events => BrokerSocketHandler.TopicTableChangedHandler(events, _brokerSocketsDict, _brokerSockets));
+            client.WatchRange(BrokerSocketHandler.BrokerTablePrefix, async events =>
+            {
+                _brokerSocketHandlerLock.WaitOne();
+                _brokerSockets = await BrokerSocketHandler.BrokerTableChangedHandler(events, _brokerSockets);
+                _brokerSocketHandlerLock.Release();
+            });
+            client.WatchRange(BrokerSocketHandler.TopicTablePrefix, events =>
+            {
+                _brokerSocketHandlerLock.WaitOne();
+                BrokerSocketHandler.TopicTableChangedHandler(events, _brokerSocketsDict, _brokerSockets);
+                _brokerSocketHandlerLock.Release();
+            });
         }
 
         public async Task InitSocketLocalhost()
@@ -106,11 +117,11 @@ namespace Producer.Services
 
         private async Task<bool> SendMessage(byte[] message, MessageHeader header)
         {
-            if (EnvironmentVariables.IsDev)
-            {
-                await _localhostBrokerSocket.SendMessage(message);
-                return true;
-            }
+            //if (EnvironmentVariables.IsDev)
+            //{
+            //    await _localhostBrokerSocket.SendMessage(message);
+            //    return true;
+            //}
 
             if (_brokerSocketsDict.TryGetValue($"{header.Topic}/{header.Partition}", out var brokerSocket))
             {
