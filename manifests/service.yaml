@@ -4,7 +4,7 @@ metadata:
   name: producer
   labels:
     app: producer
-    monitor: true
+    monitor: "true"
 spec:
   ports:
   - port: 80
